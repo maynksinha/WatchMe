@@ -1,6 +1,8 @@
 // require('dotenv').config({path:'./env'})
 import dotenv from 'dotenv'
 import DBconnection from './db/index.js'
+import app from './app.js'
+import { setupGracefulShutdown } from './utils/shutDown.js'
 
 dotenv.config(
     {
@@ -8,25 +10,27 @@ dotenv.config(
     }
 )
 
-DBconnection()
+const PORT = process.env.PORT || "8000"
 
+let server;
 
-// ;(async ()=>{
-//     try {
-//         await mongoose.connect(`${process.env.DATABASE_URL}/${DB_NAME}`)
+const startServer = async () => {
+    try {
+        await DBconnection();
 
-//         app.on("error" , (error) => {
-//                 console.log("ERROR",error)
-//         })
-//         app.listen(process.env.PORT , ()=>{
-//             console.log(`App is listening on port ${process.env.PORT}`)
-//         })
-        
-//     } catch (error) {
-//         console.log(error);
-//         throw error 
-        
-//     }
+        server = app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
 
-// })
-// ()
+        // console.log("******************************", server)
+        // attach graceful shutdown
+        setupGracefulShutdown(server);
+
+    } catch (err) {
+        console.error("Startup error:", err);
+        process.exit(1);
+    }
+};
+
+startServer();
+
